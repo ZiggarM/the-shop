@@ -8,15 +8,15 @@ export default function RootLayout() {
         options={{ headerShown: false, title: "This is the Shop" }}
       />
       <Stack.Screen
-        name="(categories)"
-        options={{ headerShown: true, title: "Categories" }}
+        name="categories"
+        options={{ headerShown: false, title: "Categories" }}
       />
       <Stack.Screen
-        name="(product)"
+        name="product"
         options={{ headerShown: true, title: "Product" }}
       />
       <Stack.Screen
-        name="(cart)"
+        name="cart"
         options={{ presentation: "modal", title: "Shopping Cart" }}
       />
       <Stack.Screen name="(auth)" options={{ headerShown: true }} />
