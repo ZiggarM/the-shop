@@ -5,9 +5,9 @@ import { listHeader } from "../../components/list-header";
 import { useAuth } from "../../providers/auth-provider";
 
 const Home = () => {
-  // const { user } = useAuth();
+  const { user } = useAuth();
 
-  // console.log("user", user);
+  console.log("user", user);
 
   return (
     <View>
