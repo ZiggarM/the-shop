@@ -70,7 +70,8 @@ export default function Auth() {
       }}
       style={styles.backgroundImage}
     >
-      <View style={styles.overlay}></View>
+      <View style={styles.overlay}/>
+      
       <View style={styles.container}>
         <Text style={styles.title}>Welcome</Text>
         <Text style={styles.subtitle}>Please sign in</Text>
