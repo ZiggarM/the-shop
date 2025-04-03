@@ -1,12 +1,11 @@
 import { ADMIN } from "@/constants/constants";
 import { createClient } from "@/supabase/server";
 import { redirect } from "next/navigation";
+import { ReactNode } from "react";
 
-export default async function AdminLayout({
+export default async function AuthLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: ReactNode }>) {
   const supabase = await createClient();
 
   const { data: authData } = await supabase.auth.getUser();
@@ -22,8 +21,8 @@ export default async function AdminLayout({
       console.log("Error fetching user data", error);
     }
 
-    if (data?.type === ADMIN) return redirect("/");
+    if (data?.type === ADMIN) return redirect("/admin");
   }
-  // TODO check if the user is authenticated and if he is admin
+
   return <>{children}</>;
 }

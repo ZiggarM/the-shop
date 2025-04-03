@@ -41,7 +41,7 @@ export async function updateSession(request: NextRequest) {
     !user &&
     !request.nextUrl.pathname.startsWith('/login') &&
     !request.nextUrl.pathname.startsWith('/auth') && 
-    request.nextUrl.pathname != '/' // Add thois line for homepage to be accesible to all users
+    request.nextUrl.pathname != '/' // Add this line for homepage to be accesible to all users
   ) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
