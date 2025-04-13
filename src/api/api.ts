@@ -1,5 +1,7 @@
-import {useQuery} from '@tanstack/react-query';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../providers/auth-provider';
+import { generateOrderSlug } from '../utils/utils';
 
 export const getProductsAndCategories = () => {
     return useQuery({
@@ -38,6 +40,42 @@ export const getProduct = (slug: string) => {
     })
 }
 
+export const createOrder = () => {
+  const {
+    user: { id },
+  } = useAuth();
+
+  const slug = generateOrderSlug();
+
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    async mutationFn({ totalPrice }: { totalPrice: number }) {
+      const { data, error } = await supabase
+        .from('order')
+        .insert({
+          totalPrice,
+          slug,
+          user: id,
+          status: 'Pending',
+        })
+        .select('*')
+
+      if (error)
+        throw new Error(
+          'An error occurred while creating order: ' + error.message
+        );
+
+      return data;
+    },
+
+    async onSuccess() {
+      await queryClient.invalidateQueries({ queryKey: ['order'] });
+    },
+  });
+};
+
+
 export const getCategoryAndProducts = (categorySlug: string) => {
     return useQuery({
         queryKey: ['categoryAndProducts', categorySlug],
@@ -65,3 +103,76 @@ export const getCategoryAndProducts = (categorySlug: string) => {
         },
     })
 }
+
+
+export const getMyOrders = () => {
+    const {user: {id}} = useAuth();
+
+    return useQuery({
+        queryKey: ['orders', id],
+        queryFn: async () => {
+        const {data, error} = await supabase
+            .from('order')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .eq('user', id);
+
+        if (error) {
+            throw new Error('Here we go again... ' + error.message);
+        };
+
+        return data;
+        }
+    })
+}
+
+
+export const createOrderItem = () => {
+    return useMutation({
+        mutationFn: async (
+            insertData: {
+                orderId: number;
+                productId: number;
+                quantity: number;
+            }[]
+        ) => {
+            const { data, error } = await supabase
+                .from('order_item')
+                .insert(
+                    insertData.map(({ orderId, productId, quantity }) => ({
+                        order: orderId,
+                        product: productId,
+                        quantity
+                    }))
+                )
+                .select('*')
+                .single();
+
+            if (error) {
+                throw new Error('Failed to insert order items: ' + error.message);
+            }
+
+            const productQuantities = insertData.reduce((acc, { productId, quantity }) => {
+                if (!acc[productId]) {
+                    acc[productId] = 0;
+                }
+                acc[productId] += quantity;
+                return acc;
+            }, {} as Record<number, number>);
+
+            await Promise.all(
+                Object.entries(productQuantities).map(async ([productId, totalQuantity]) => {
+                    const { error } = await supabase.rpc('decrement_product_quantity', {
+                        product_id: Number(productId),
+                        quantity: totalQuantity
+                    });
+                    if (error) {
+                        throw new Error(`Failed to decrement quantity for product ${productId}: ${error.message}`);
+                    }
+                })
+            );
+
+            return data;
+        }
+    });
+};

@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   FlatList,
   ListRenderItem,
   Pressable,
@@ -6,25 +7,22 @@ import {
   Text,
   View,
 } from "react-native";
-import { ORDERS } from "../../../../assets/orders";
 import { Link, Stack } from "expo-router";
-import { Order, OrderStatus } from "../../../../assets/types/order";
+import { format } from "date-fns";
+import { Tables } from "../../../types/database.types";
+import { getMyOrders } from "../../../api/api";
 
-const statusDisplayText: Record<OrderStatus, string> = {
-  Pending: "Pending",
-  Completed: "Completed",
-  Shipped: "Shipped",
-  InTransit: "inTransit",
-};
 
-const renderItem: ListRenderItem<Order> = ({ item }) => (
+const renderItem: ListRenderItem<Tables<'order'>> = ({ item }) => (
   <Link href={`/orders/${item.slug}`} asChild>
     <Pressable style={styles.orderContainer}>
       <View style={styles.orderContent}>
         <View style={styles.orderDetailsContainer}>
-          <Text style={styles.orderItem}>{item.item}</Text>
-          <Text style={styles.orderDetails}>{item.details}</Text>
-          <Text style={styles.date}></Text>
+          <Text style={styles.orderItem}>{item.slug}</Text>
+          <Text style={styles.orderDetails}>{item.description}</Text>
+          <Text style={styles.date}>{
+            format(new Date(item.created_at), 'dd/MM/yyyy')
+            }</Text>
         </View>
         <View
           style={[styles.statusBadge, styles[`statusBadge_${item.status}`]]}
@@ -37,11 +35,35 @@ const renderItem: ListRenderItem<Order> = ({ item }) => (
 );
 
 const Orders = () => {
+  const {data: orders, error, isLoading} = getMyOrders();
+
+  if (isLoading) {
+    return <ActivityIndicator />;
+  }
+
+  if (error || !orders) {
+    return (
+      <Text>
+        Error: {error?.message ||
+          "An error appeared! What will you do? [Fight] [Run] [Cry]"}
+      </Text>
+    );
+  }
+
+  if (orders.length === 0) {
+    return <Text style={{
+      fontSize: 20,
+      color: "#555",
+      textAlign: "center",
+      padding: 20
+    }}>No orders created yet</Text>;
+  }
+
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ title: "Orders" }} />
       <FlatList
-        data={ORDERS}
+        data={orders}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
       />
