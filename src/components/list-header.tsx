@@ -1,3 +1,4 @@
+import { Link } from "expo-router";
 import {
   FlatList,
   Image,
@@ -7,13 +8,17 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Link } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
-import { CATEGORIES } from "../../assets/categories";
+
 import { useCartStore } from "../store/cart-store";
 import { supabase } from "../lib/supabase";
+import { Tables } from "../types/database.types";
 
-export const listHeader = () => {
+export const ListHeader = ({
+  categories,
+}: {
+  categories: Tables<"category">[];
+}) => {
   const { getItemCount } = useCartStore();
 
   const handleSignOut = async () => {
@@ -21,7 +26,7 @@ export const listHeader = () => {
   };
 
   return (
-    <View style={styles.headerContainer}>
+    <View style={[styles.headerContainer]}>
       <View style={styles.headerTop}>
         <View style={styles.headerLeft}>
           <View style={styles.avatarContainer}>
@@ -68,7 +73,7 @@ export const listHeader = () => {
       <View style={styles.categoriesContainer}>
         <Text style={styles.sectionTitle}>Categories</Text>
         <FlatList
-          data={CATEGORIES}
+          data={categories}
           renderItem={({ item }) => (
             <Link asChild href={`/categories/${item.slug}`}>
               <Pressable style={styles.category}>

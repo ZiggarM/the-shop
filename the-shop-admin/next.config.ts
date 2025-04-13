@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
       },
     ]
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb", // Set your preferred limit here
+    },
+  },
 };
 
 export default nextConfig;
