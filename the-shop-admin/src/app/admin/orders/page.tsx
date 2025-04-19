@@ -1,16 +1,21 @@
-import { getOrderWithProducts } from "@/actions/orders";
+import { getOrdersWithProducts } from "@/actions/orders";
+import PageComponent from "@/app/admin/orders/page-component";
 
 
 const Orders = async () => {
-    const orderWithProducts = await getOrderWithProducts();
+    const ordersWithProducts = await getOrdersWithProducts();
 
-    if (!orderWithProducts) {
+    if (!ordersWithProducts) {
         return <div className="text-center font-bold text-2xl">No order found</div>
     }
 
 
 
-return <div className="">Orders page</div>
+return (
+  <div className="">
+    <PageComponent ordersWithProducts={ordersWithProducts} />
+  </div>
+);
 
 
 }
