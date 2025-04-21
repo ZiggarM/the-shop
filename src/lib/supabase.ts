@@ -1,68 +1,71 @@
-import { createClient } from "@supabase/supabase-js";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as SecureStore from 'expo-secure-store';
-import * as aesjs from 'aes-js';
-import 'react-native-get-random-values';
-import { Database } from "../types/database.types";
+// import { createClient } from "@supabase/supabase-js";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// import * as SecureStore from 'expo-secure-store';
+// import * as aesjs from 'aes-js';
+// import 'react-native-get-random-values';
+// import { Database } from "../types/database.types";
 
-const supabaseUrl = "https://eqmcbbkvlkpcszzbjmuo.supabase.co"
-const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxbWNiYmt2bGtwY3N6emJqbXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2NzA2NjQsImV4cCI6MjA1OTI0NjY2NH0.TfqxgTO6EGkW8LqWGhAUaT3-jVtq3I7o01fJCm3syvk"
+// // const supabaseUrl = "https://eqmcbbkvlkpcszzbjmuo.supabase.co"
+// // const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxbWNiYmt2bGtwY3N6emJqbXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2NzA2NjQsImV4cCI6MjA1OTI0NjY2NH0.TfqxgTO6EGkW8LqWGhAUaT3-jVtq3I7o01fJCm3syvk"
 
-// As Expo's SecureStore does not support values larger than 2048
-// bytes, an AES-256 key is generated and stored in SecureStore, while
-// it is used to encrypt/decrypt values stored in AsyncStorage.
-class LargeSecureStore {
-  private async _encrypt(key: string, value: string) {
-    const encryptionKey = crypto.getRandomValues(new Uint8Array(256 / 8));
+// const supabaseUrl = "http://127.0.0.1:54321"
+// const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
 
-    const cipher = new aesjs.ModeOfOperation.ctr(encryptionKey, new aesjs.Counter(1));
-    const encryptedBytes = cipher.encrypt(aesjs.utils.utf8.toBytes(value));
+// // As Expo's SecureStore does not support values larger than 2048
+// // bytes, an AES-256 key is generated and stored in SecureStore, while
+// // it is used to encrypt/decrypt values stored in AsyncStorage.
+// class LargeSecureStore {
+//   private async _encrypt(key: string, value: string) {
+//     const encryptionKey = crypto.getRandomValues(new Uint8Array(256 / 8));
 
-    await SecureStore.setItemAsync(key, aesjs.utils.hex.fromBytes(encryptionKey));
+//     const cipher = new aesjs.ModeOfOperation.ctr(encryptionKey, new aesjs.Counter(1));
+//     const encryptedBytes = cipher.encrypt(aesjs.utils.utf8.toBytes(value));
 
-    return aesjs.utils.hex.fromBytes(encryptedBytes);
-  }
+//     await SecureStore.setItemAsync(key, aesjs.utils.hex.fromBytes(encryptionKey));
 
-  private async _decrypt(key: string, value: string) {
-    const encryptionKeyHex = await SecureStore.getItemAsync(key);
-    if (!encryptionKeyHex) {
-      return encryptionKeyHex;
-    }
+//     return aesjs.utils.hex.fromBytes(encryptedBytes);
+//   }
 
-    const cipher = new aesjs.ModeOfOperation.ctr(aesjs.utils.hex.toBytes(encryptionKeyHex), new aesjs.Counter(1));
-    const decryptedBytes = cipher.decrypt(aesjs.utils.hex.toBytes(value));
+//   private async _decrypt(key: string, value: string) {
+//     const encryptionKeyHex = await SecureStore.getItemAsync(key);
+//     if (!encryptionKeyHex) {
+//       return encryptionKeyHex;
+//     }
 
-    return aesjs.utils.utf8.fromBytes(decryptedBytes);
-  }
+//     const cipher = new aesjs.ModeOfOperation.ctr(aesjs.utils.hex.toBytes(encryptionKeyHex), new aesjs.Counter(1));
+//     const decryptedBytes = cipher.decrypt(aesjs.utils.hex.toBytes(value));
 
-  async getItem(key: string) {
-    const encrypted = await AsyncStorage.getItem(key);
-    if (!encrypted) { return encrypted; }
+//     return aesjs.utils.utf8.fromBytes(decryptedBytes);
+//   }
 
-    return await this._decrypt(key, encrypted);
-  }
+//   async getItem(key: string) {
+//     const encrypted = await AsyncStorage.getItem(key);
+//     if (!encrypted) { return encrypted; }
 
-  async removeItem(key: string) {
-    await AsyncStorage.removeItem(key);
-    await SecureStore.deleteItemAsync(key);
-  }
+//     return await this._decrypt(key, encrypted);
+//   }
 
-  async setItem(key: string, value: string) {
-    const encrypted = await this._encrypt(key, value);
+//   async removeItem(key: string) {
+//     await AsyncStorage.removeItem(key);
+//     await SecureStore.deleteItemAsync(key);
+//   }
 
-    await AsyncStorage.setItem(key, encrypted);
-  }
-}
+//   async setItem(key: string, value: string) {
+//     const encrypted = await this._encrypt(key, value);
+
+//     await AsyncStorage.setItem(key, encrypted);
+//   }
+// }
 
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: new LargeSecureStore(),
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-  },
-});
+// export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+//   auth: {
+//     storage: new LargeSecureStore(),
+//     autoRefreshToken: true,
+//     persistSession: true,
+//     detectSessionInUrl: false,
+//   },
+// });
 
 
 
@@ -71,78 +74,81 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 
 
 
-// import { createClient } from "@supabase/supabase-js";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
-// import * as SecureStore from 'expo-secure-store';
-// import * as aesjs from 'aes-js';
-// import { Platform } from 'react-native';
-// import 'react-native-get-random-values';
+import { createClient } from "@supabase/supabase-js";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from 'expo-secure-store';
+import * as aesjs from 'aes-js';
+import { Platform } from 'react-native';
+import 'react-native-get-random-values';
 // const supabaseUrl = "https://eqmcbbkvlkpcszzbjmuo.supabase.co"
 // const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxbWNiYmt2bGtwY3N6emJqbXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2NzA2NjQsImV4cCI6MjA1OTI0NjY2NH0.TfqxgTO6EGkW8LqWGhAUaT3-jVtq3I7o01fJCm3syvk"
 
-// // As Expo's SecureStore does not support values larger than 2048
-// // bytes, an AES-256 key is generated and stored in SecureStore, while
-// // it is used to encrypt/decrypt values stored in AsyncStorage.
-// class LargeSecureStore {
-//   private async _encrypt(key: string, value: string) {
-//     const encryptionKey = crypto.getRandomValues(new Uint8Array(32));
-//     const cipher = new aesjs.ModeOfOperation.ctr(encryptionKey, new aesjs.Counter(1));
-//     const encryptedBytes = cipher.encrypt(aesjs.utils.utf8.toBytes(value));
+const supabaseUrl = process.env.EXPO_PUBLIC__SUPABASE_URL;
+const supabaseAnonKey = process.env.EXPO_PUBLIC__SUPABASE_ANNON_KEY;
 
-//     if (Platform.OS !== 'web') {
-//       await SecureStore.setItemAsync(key, aesjs.utils.hex.fromBytes(encryptionKey));
-//     } else {
-//       localStorage.setItem(`${key}-key`, aesjs.utils.hex.fromBytes(encryptionKey));
-//     }
+// As Expo's SecureStore does not support values larger than 2048
+// bytes, an AES-256 key is generated and stored in SecureStore, while
+// it is used to encrypt/decrypt values stored in AsyncStorage.
+class LargeSecureStore {
+  private async _encrypt(key: string, value: string) {
+    const encryptionKey = crypto.getRandomValues(new Uint8Array(32));
+    const cipher = new aesjs.ModeOfOperation.ctr(encryptionKey, new aesjs.Counter(1));
+    const encryptedBytes = cipher.encrypt(aesjs.utils.utf8.toBytes(value));
 
-//     return aesjs.utils.hex.fromBytes(encryptedBytes);
-//   }
+    if (Platform.OS !== 'web') {
+      await SecureStore.setItemAsync(key, aesjs.utils.hex.fromBytes(encryptionKey));
+    } else {
+      localStorage.setItem(`${key}-key`, aesjs.utils.hex.fromBytes(encryptionKey));
+    }
 
-//   private async _decrypt(key: string, value: string) {
-//     let encryptionKeyHex: string | null = null;
+    return aesjs.utils.hex.fromBytes(encryptedBytes);
+  }
 
-//     if (Platform.OS !== 'web') {
-//       encryptionKeyHex = await SecureStore.getItemAsync(key);
-//     } else {
-//       encryptionKeyHex = localStorage.getItem(`${key}-key`);
-//     }
+  private async _decrypt(key: string, value: string) {
+    let encryptionKeyHex: string | null = null;
 
-//     if (!encryptionKeyHex) {
-//       return null;
-//     }
+    if (Platform.OS !== 'web') {
+      encryptionKeyHex = await SecureStore.getItemAsync(key);
+    } else {
+      encryptionKeyHex = localStorage.getItem(`${key}-key`);
+    }
 
-//     const cipher = new aesjs.ModeOfOperation.ctr(aesjs.utils.hex.toBytes(encryptionKeyHex), new aesjs.Counter(1));
-//     const decryptedBytes = cipher.decrypt(aesjs.utils.hex.toBytes(value));
-//     return aesjs.utils.utf8.fromBytes(decryptedBytes);
-//   }
+    if (!encryptionKeyHex) {
+      return null;
+    }
 
-//   async getItem(key: string) {
-//     const encrypted = await AsyncStorage.getItem(key);
-//     if (!encrypted) return null;
+    const cipher = new aesjs.ModeOfOperation.ctr(aesjs.utils.hex.toBytes(encryptionKeyHex), new aesjs.Counter(1));
+    const decryptedBytes = cipher.decrypt(aesjs.utils.hex.toBytes(value));
+    return aesjs.utils.utf8.fromBytes(decryptedBytes);
+  }
 
-//     return await this._decrypt(key, encrypted);
-//   }
+  async getItem(key: string) {
+    const encrypted = await AsyncStorage.getItem(key);
+    if (!encrypted) return null;
 
-//   async removeItem(key: string) {
-//     await AsyncStorage.removeItem(key);
-//     if (Platform.OS !== 'web') {
-//       await SecureStore.deleteItemAsync(key);
-//     } else {
-//       localStorage.removeItem(`${key}-key`);
-//     }
-//   }
+    return await this._decrypt(key, encrypted);
+  }
 
-//   async setItem(key: string, value: string) {
-//     const encrypted = await this._encrypt(key, value);
-//     await AsyncStorage.setItem(key, encrypted);
-//   }
-// }
+  async removeItem(key: string) {
+    await AsyncStorage.removeItem(key);
+    if (Platform.OS !== 'web') {
+      await SecureStore.deleteItemAsync(key);
+    } else {
+      localStorage.removeItem(`${key}-key`);
+    }
+  }
 
-// export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-//   auth: {
-//     storage: new LargeSecureStore(),
-//     autoRefreshToken: true,
-//     persistSession: true,
-//     detectSessionInUrl: false,
-//   },
-// });
+  async setItem(key: string, value: string) {
+    const encrypted = await this._encrypt(key, value);
+    await AsyncStorage.setItem(key, encrypted);
+  }
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: new LargeSecureStore(),
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+  },
+});
